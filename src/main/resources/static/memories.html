@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="/style.css">
+    <title>Our Memories 📸</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", sans-serif;
+            color: #7b2345;
+            background: linear-gradient(135deg, #ffe0eb, #fff5f8);
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        nav a,
+        nav button {
+            border: none;
+            border-radius: 22px;
+            padding: 10px 15px;
+            background: #ff6f9f;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #c72f65;
+            font-size: 42px;
+        }
+
+        .intro {
+            text-align: center;
+            line-height: 1.7;
+            font-size: 17px;
+        }
+
+        .memory-form {
+            margin: 30px auto;
+            padding: 25px;
+            max-width: 650px;
+            border-radius: 25px;
+            background: white;
+            box-shadow: 0 8px 25px rgba(160, 40, 80, 0.15);
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            margin: 8px 0;
+            padding: 13px;
+            border: 1px solid #f0abc2;
+            border-radius: 12px;
+            outline: none;
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        button {
+            border: none;
+            border-radius: 25px;
+            padding: 13px 22px;
+            background: #d93670;
+            color: white;
+            cursor: pointer;
+        }
+
+        .memory-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .memory-card {
+            padding: 25px;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(160, 40, 80, 0.12);
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .memory-card h3 {
+            color: #d93670;
+            margin-top: 0;
+        }
+
+        .memory-date {
+            color: #a85b78;
+            font-size: 13px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #a85b78;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="main-nav">
+
+    <div class="nav-top">
+
+        <a class="nav-logo" href="/index.html">
+            BETWEEN US ❤️
+        </a>
+
+        <button
+            class="menu-toggle"
+            onclick="toggleMenu()"
+            aria-label="Open navigation menu"
+        >
+            ☰
+        </button>
+
+    </div>
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="/index.html">
+            Home 🏡
+        </a>
+
+        <a href="/chat.html">
+            Our Chat 💬
+        </a>
+
+        <a href="/media.html">
+            Our Media 🎞️
+        </a>
+
+        <a href="/memories.html">
+            Memories 📸
+        </a>
+
+        <a href="/love-letter.html">
+            Love Letter 💌
+        </a>
+
+        <button onclick="logout()">
+            Logout 🚪
+        </button>
+
+    </div>
+
+</nav>
+
+<div class="container">
+
+    <h1>Our Memories 📸</h1>
+
+    <p class="intro">
+        Some moments are too precious to be forgotten.
+        Write them down here and keep them safe in our little world. ❤️
+    </p>
+
+    <div class="memory-form">
+        <h2>Add a Memory 💗</h2>
+
+        <input
+            type="text"
+            id="memoryTitle"
+            placeholder="Memory title"
+        >
+
+        <input
+            type="date"
+            id="memoryDate"
+        >
+
+        <textarea
+            id="memoryText"
+            placeholder="Write what happened, how you felt, or why this moment matters..."
+        ></textarea>
+
+        <button onclick="addMemory()">
+            Save Memory 💖
+        </button>
+    </div>
+
+    <div class="memory-list" id="memoryList"></div>
+
+</div>
+
+<script>
+    let memories = [];
+
+    async function checkLogin() {
+        try {
+            const response = await fetch(
+                "/api/auth/current-user",
+                {
+                    method: "GET",
+                    credentials: "include"
+                }
+            );
+
+            if (!response.ok) {
+                window.location.href = "/login.html";
+                return;
+            }
+
+            loadMemories();
+
+        } catch (error) {
+            window.location.href = "/login.html";
+        }
+    }
+
+    function loadMemories() {
+        const saved =
+            localStorage.getItem("betweenUsMemories");
+
+        memories = saved ? JSON.parse(saved) : [];
+
+        displayMemories();
+    }
+
+    function addMemory() {
+        const title =
+            document.getElementById("memoryTitle")
+                .value.trim();
+
+        const date =
+            document.getElementById("memoryDate")
+                .value;
+
+        const text =
+            document.getElementById("memoryText")
+                .value.trim();
+
+        if (!title || !text) {
+            alert("Please enter a title and memory.");
+            return;
+        }
+
+        memories.push({
+            title: title,
+            date: date,
+            text: text
+        });
+
+        localStorage.setItem(
+            "betweenUsMemories",
+            JSON.stringify(memories)
+        );
+
+        document.getElementById("memoryTitle").value = "";
+        document.getElementById("memoryDate").value = "";
+        document.getElementById("memoryText").value = "";
+
+        displayMemories();
+    }
+
+    function displayMemories() {
+        const list =
+            document.getElementById("memoryList");
+
+        list.innerHTML = "";
+
+        if (memories.length === 0) {
+            list.innerHTML =
+                '<div class="empty">Our first memory is waiting to be written... 💕</div>';
+            return;
+        }
+
+        memories.forEach((memory, index) => {
+            const card =
+                document.createElement("div");
+
+            card.className = "memory-card";
+
+            const title =
+                document.createElement("h3");
+
+            title.textContent =
+                memory.title + " ❤️";
+
+            const date =
+                document.createElement("div");
+
+            date.className = "memory-date";
+            date.textContent =
+                memory.date || "A special day";
+
+            const text =
+                document.createElement("p");
+
+            text.textContent = memory.text;
+
+            const deleteButton =
+                document.createElement("button");
+
+            deleteButton.textContent = "Delete";
+
+            deleteButton.style.marginTop = "15px";
+            deleteButton.style.background = "#b8325e";
+
+            deleteButton.onclick = () => {
+                memories.splice(index, 1);
+
+                localStorage.setItem(
+                    "betweenUsMemories",
+                    JSON.stringify(memories)
+                );
+
+                displayMemories();
+            };
+
+            card.appendChild(title);
+            card.appendChild(date);
+            card.appendChild(text);
+            card.appendChild(deleteButton);
+
+            list.appendChild(card);
+        });
+    }
+   
+    function toggleMenu() {
+    const navLinks = document.getElementById("navLinks");
+
+    if (navLinks) {
+        navLinks.classList.toggle("open");
+    }
+}
+    async function logout() {
+        try {
+            await fetch(
+                "/api/auth/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
+        } finally {
+            window.location.href = "/login.html";
+        }
+    }
+
+    checkLogin();
+</script>
+
+</body>
+</html>

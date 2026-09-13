@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+
+    <title>Our Chat 💬</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", sans-serif;
+            color: #7d2347;
+
+            background-color: #ffdce9;
+            background-image:
+                radial-gradient(circle at 15% 20%, #ff91b7 0 7px, transparent 8px),
+                radial-gradient(circle at 80% 15%, #ffb3ca 0 8px, transparent 9px),
+                radial-gradient(circle at 35% 75%, #ff6f9f 0 6px, transparent 7px),
+                radial-gradient(circle at 90% 80%, #ff9cbd 0 7px, transparent 8px);
+            background-size: 130px 130px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 3px 15px rgba(160, 40, 80, 0.15);
+        }
+
+        nav a,
+        nav button {
+            border: none;
+            border-radius: 22px;
+            padding: 10px 15px;
+            background: #ff6f9f;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        nav a:hover,
+        nav button:hover {
+            background: #dc477b;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            margin: 25px auto;
+            padding: 0 15px;
+        }
+
+        .chat-card {
+            overflow: hidden;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.93);
+            box-shadow: 0 10px 30px rgba(150, 35, 80, 0.2);
+        }
+
+        .chat-header {
+            padding: 22px;
+            text-align: center;
+            color: white;
+            background: linear-gradient(135deg, #e83f78, #ff82ad);
+        }
+
+        .chat-header h1 {
+            margin: 0;
+        }
+
+        #welcomeText {
+            margin-top: 7px;
+            font-size: 14px;
+        }
+
+        .search-area {
+            display: flex;
+            gap: 8px;
+            padding: 15px;
+            background: #fff0f5;
+        }
+
+        .search-area input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #f3aec5;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .search-area button {
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            background: #e83f78;
+            color: white;
+            cursor: pointer;
+        }
+
+        .messages {
+            height: 480px;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(255, 226, 237, 0.75);
+        }
+
+        .message-row {
+            display: flex;
+            margin: 12px 0;
+        }
+
+        .message-row.sent {
+            justify-content: flex-end;
+        }
+
+        .message-row.received {
+            justify-content: flex-start;
+        }
+
+        .bubble {
+            max-width: 78%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            box-shadow: 0 3px 8px rgba(140, 35, 75, 0.12);
+            word-wrap: break-word;
+        }
+
+        .sent .bubble {
+            color: white;
+            background: #e83f78;
+            border-bottom-right-radius: 5px;
+        }
+
+        .received .bubble {
+            color: #76233f;
+            background: white;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-text {
+            font-size: 16px;
+            white-space: pre-wrap;
+        }
+
+        .message-time {
+            display: block;
+            margin-top: 5px;
+            font-size: 11px;
+            opacity: 0.75;
+            text-align: right;
+        }
+
+        .empty {
+            text-align: center;
+            color: #a85b78;
+            padding: 50px 10px;
+        }
+
+        .typing {
+            min-height: 24px;
+            padding: 5px 20px;
+            color: #ad4168;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .input-area input {
+            flex: 1;
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid #f0a8c1;
+            border-radius: 25px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .emoji-button {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 50%;
+            background: #ffe1ec;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+        .input-area .send-button {
+            border: none;
+            padding: 0 20px;
+            border-radius: 25px;
+            background: #e83f78;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .emoji-picker {
+            display: none;
+            padding: 12px;
+            background: #fff5f8;
+            border-top: 1px solid #f5bfd0;
+        }
+
+        .emoji-picker.open {
+            display: block;
+        }
+
+        .emoji-tabs {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .emoji-tab {
+            min-width: 42px;
+            height: 38px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            font-size: 21px;
+            cursor: pointer;
+        }
+
+        .emoji-tab.active {
+            background: #ffc0d4;
+        }
+
+        .emoji-title {
+            margin: 5px 0 10px;
+            color: #a33660;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+            gap: 5px;
+            max-height: 245px;
+            overflow-y: auto;
+        }
+
+        .emoji-item {
+            border: none;
+            border-radius: 10px;
+            padding: 7px 2px;
+            background: transparent;
+            font-size: 27px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .emoji-item:hover {
+            background: #ffd1e0;
+            transform: scale(1.12);
+        }
+
+        .status {
+            padding: 8px;
+            text-align: center;
+            color: #b32e5e;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .messages {
+                height: 430px;
+            }
+
+            .bubble {
+                max-width: 88%;
+            }
+
+            .input-area {
+                gap: 5px;
+                padding: 10px;
+            }
+
+            .input-area .send-button {
+                padding: 0 14px;
+            }
+
+            .emoji-button {
+                width: 43px;
+                height: 43px;
+            }
+
+            .emoji-item {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+<nav class="main-nav">
+
+    <div class="nav-top">
+
+        <a class="nav-logo" href="/index.html">
+            BETWEEN US ❤️
+        </a>
+
+        <button
+            class="menu-toggle"
+            onclick="toggleMenu()"
+            aria-label="Open navigation menu"
+        >
+            ☰
+        </button>
+
+    </div>
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="/index.html">
+            Home 🏡
+        </a>
+
+        <a href="/chat.html">
+            Our Chat 💬
+        </a>
+
+        <a href="/media.html">
+            Our Media 🎞️
+        </a>
+
+        <a href="/memories.html">
+            Memories 📸
+        </a>
+
+        <a href="/love-letter.html">
+            Love Letter 💌
+        </a>
+
+        <button onclick="logout()">
+            Logout 🚪
+        </button>
+
+    </div>
+
+</nav>
+    
+
+<div class="container">
+    <div class="chat-card">
+
+        <div class="chat-header">
+            <h1>Our Little Chat 💞</h1>
+            <div id="welcomeText">Checking login...</div>
+        </div>
+
+        <div class="search-area">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search messages..."
+                onkeydown="handleSearchKey(event)"
+            >
+
+            <button onclick="searchMessages()">Search 🔍</button>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="empty">Loading our messages... 💗</div>
+        </div>
+
+        <div class="typing" id="typingText"></div>
+
+        <div class="emoji-picker" id="emojiPicker">
+
+            <div class="emoji-tabs">
+                <button class="emoji-tab active" onclick="showEmojiCategory('smileys', this)">😀</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('love', this)">❤️</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('people', this)">🧑</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('animals', this)">🐶</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('food', this)">🍕</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('travel', this)">🚗</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('objects', this)">💡</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('symbols', this)">💯</button>
+                <button class="emoji-tab" onclick="showEmojiCategory('flags', this)">🏳️</button>
+            </div>
+
+            <div class="emoji-title" id="emojiTitle">
+                Smileys & Emotion
+            </div>
+
+            <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+
+        <div class="input-area">
+            <button class="emoji-button" onclick="toggleEmojiPicker()">
+                😊
+            </button>
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Write something to your love..."
+                oninput="showTyping()"
+                onkeydown="handleMessageKey(event)"
+            >
+
+            <button class="send-button" onclick="sendMessage()">
+                Send 💌
+            </button>
+        </div>
+
+        <div class="status" id="statusText"></div>
+    </div>
+</div>
+
+<script>
+    let currentUser = "";
+    let allMessages = [];
+    let typingTimer;
+
+    const emojiCategories = {
+        smileys: {
+            title: "Smileys & Emotion",
+            emojis: [
+                "😀","😃","😄","😁","😆","😅","😂","🤣","🥹","☺️",
+                "😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗",
+                "😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓",
+                "😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕",
+                "🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤",
+                "😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰",
+                "😥","😓","🫣","🤗","🫡","🤔","🫢","🤭","🤫","🤥",
+                "😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲",
+                "🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧",
+                "😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡",
+                "💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸",
+                "😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊",
+                "💋","💌","💘","💝","💖","💗","💓","💞","💕","💟",
+                "❣️","💔","❤️‍🔥","❤️‍🩹","❤️","🩷","🧡","💛","💚",
+                "💙","🩵","💜","🤎","🖤","🩶","🤍"
+            ]
+        },
+
+        love: {
+            title: "Love & Romance",
+            emojis: [
+                "❤️","🩷","🧡","💛","💚","💙","🩵","💜","🤎","🖤",
+                "🩶","🤍","💕","💞","💓","💗","💖","💘","💝","💟",
+                "❣️","💔","❤️‍🔥","❤️‍🩹","💋","💌","😍","🥰","😘",
+                "😚","😙","😗","☺️","😊","😉","🫶","🤝","🫂","💏",
+                "💑","👩‍❤️‍👨","👨‍❤️‍👨","👩‍❤️‍👩","💐","🌹","🌷","🌸",
+                "🌺","🌻","🌼","🌷","🪷","💍","💎","🎁","🎀","🧸",
+                "🍫","🍓","🍒","🍰","🧁","🍪","☕","🌙","⭐","✨",
+                "🌟","💫","🌈","🦋","🐻","🐼","🐰","🐱","🐶"
+            ]
+        },
+
+        people: {
+            title: "People & Body",
+            emojis: [
+                "👋","🤚","🖐️","✋","🖖","👌","🤏","✌️","🤞","🤟",
+                "🤘","🤙","👈","👉","👆","👇","☝️","✍️","👏","🙌",
+                "👐","🤲","🙏","💪","🫶","🫂","👀","👁️","👄","👅",
+                "👂","🧠","🫀","🫁","🦷","🦴","👶","🧒","👦","👧",
+                "🧑","👱","👨","🧔","👨‍🦰","👨‍🦱","👨‍🦳","👨‍🦲","👩",
+                "👩‍🦰","👩‍🦱","👩‍🦳","👩‍🦲","🧓","👴","👵","🙍","🙎",
+                "🙅","🙆","💁","🙋","🧏","🙇","🤦","🤷","🧘","🏃",
+                "🚶","💃","🕺","👯","🧖","🧗","🏄","🏊","🚴","🏋️",
+                "🤸","🤾","🤹","🧚","🧜","🧝","🧞","🧟","🧛","🦸",
+                "🦹","🥷","👮","👷","💂","🕵️","👩‍⚕️","👨‍⚕️","👩‍🏫",
+                "👨‍🏫","👩‍💻","👨‍💻","👰","🤵","🤰","🤱"
+            ]
+        },
+
+        animals: {
+            title: "Animals & Nature",
+            emojis: [
+                "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯",
+                "🦁","🐮","🐷","🐸","🐵","🙈","🙉","🙊","🐒","🐔",
+                "🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦇","🐺",
+                "🐗","🐴","🦄","🐝","🪱","🐛","🦋","🐌","🐞","🐜",
+                "🪰","🪲","🪳","🦟","🦗","🕷️","🦂","🐢","🐍","🦎",
+                "🦖","🦕","🐙","🦑","🦀","🦞","🦐","🐠","🐟","🐡",
+                "🦈","🐳","🐋","🐬","🦭","🐊","🐅","🐆","🦓","🦍",
+                "🦧","🐘","🦏","🦛","🐪","🐫","🦒","🦘","🦬","🐃",
+                "🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕",
+                "🐩","🦮","🐕‍🦺","🐈","🐈‍⬛","🪶","🌸","🌹","🌺","🌻",
+                "🌼","🌷","🌱","🪴","🌲","🌳","🌴","🌵","🍀","🍁",
+                "🍂","🍃","🍄","🌾","🌿","☘️","🌍","🌎","🌏","🌙",
+                "☀️","⭐","🌟","✨","⚡","🔥","🌈","☁️","🌧️","❄️"
+            ]
+        },
+
+        food: {
+            title: "Food & Drinks",
+            emojis: [
+                "🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐",
+                "🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑",
+                "🥦","🥬","🥒","🌶️","🫑","🌽","🥕","🧄","🧅","🥔",
+                "🍠","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈",
+                "🥞","🧇","🥓","🥩","🍗","🍖","🌭","🍔","🍟","🍕",
+                "🫓","🥪","🥙","🧆","🌮","🌯","🫔","🥗","🥘","🍝",
+                "🍜","🍲","🍛","🍣","🍱","🥟","🦪","🍤","🍚","🍙",
+                "🍘","🍥","🥠","🍡","🍧","🍨","🍦","🥧","🧁","🍰",
+                "🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜",
+                "🍯","🥛","☕","🫖","🍵","🧃","🥤","🧋","🍶","🍺",
+                "🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊"
+            ]
+        },
+
+        travel: {
+            title: "Travel & Places",
+            emojis: [
+                "🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐",
+                "🛻","🚚","🚛","🚜","🛵","🏍️","🛺","🚲","🛴","🚨",
+                "🚔","🚍","🚘","🚖","✈️","🛫","🛬","🛩️","💺","🚁",
+                "🚀","🛸","🚢","⛵","🚤","🛥️","🚂","🚆","🚇","🚊",
+                "🚉","🚝","🚞","🚋","🚃","🚟","🚠","🚡","🛰️","🗺️",
+                "🗿","🗽","🗼","🏰","🏯","🏟️","🎡","🎢","🎠","⛱️",
+                "🏖️","🏝️","🏜️","🌋","⛰️","🏕️","⛺","🏠","🏡","🏢",
+                "🏥","🏦","🏨","🏪","🏫","🏛️","⛪","🕌","🛕","🕍",
+                "🗻","🌁","🌃","🌆","🌇","🌉","🎆","🎇","🌌","🌠",
+                "🎑","🎪","🎭","🎨","🎰","🚏","🛣️","🛤️","⛽","🚦"
+            ]
+        },
+
+        objects: {
+            title: "Objects",
+            emojis: [
+                "⌚","📱","📲","💻","⌨️","🖥️","🖨️","🖱️","💽","💾",
+                "💿","📷","📸","📹","🎥","📞","☎️","📺","📻","🎙️",
+                "🎧","🎤","🎵","🎶","🎼","🎹","🥁","🎷","🎺","🎸",
+                "🪕","🎻","🎮","🕹️","🎲","♟️","🎯","🎳","🎁","🎈",
+                "🎉","🎊","🎀","🪄","🧸","🪅","📚","📖","📝","✏️",
+                "🖊️","🖋️","📌","📍","📎","✂️","🔒","🔓","🔑","🔨",
+                "🪓","⛏️","🔧","🔩","⚙️","🧰","🧲","💡","🔦","🕯️",
+                "🛒","💰","💵","💳","💎","⚖️","🧪","🧬","🔬","🔭",
+                "📅","📆","🕰️","⏰","⌛","⏳","📦","✉️","📩","📨",
+                "📧","📮","💌","📢","📣","🔔","🎵","❤️","💖","💯"
+            ]
+        },
+
+        symbols: {
+            title: "Symbols",
+            emojis: [
+                "❤️","🩷","🧡","💛","💚","💙","🩵","💜","🤎","🖤",
+                "🩶","🤍","💔","❣️","💕","💞","💓","💗","💖","💘",
+                "💝","💟","☮️","✝️","☪️","🕉️","☸️","✡️","🔯","🕎",
+                "☯️","☦️","🛐","⛎","♈","♉","♊","♋","♌","♍",
+                "♎","♏","♐","♑","♒","♓","🆔","⚛️","☢️","☣️",
+                "📴","📳","🈶","🈚","🈸","🈺","🈷️","✴️","🆚","💮",
+                "🉐","㊙️","㊗️","🈴","🈵","🈹","🈲","🅰️","🅱️","🆎",
+                "🆑","🅾️","🆘","❌","⭕","🚫","💯","‼️","⁉️","❗",
+                "❓","❕","❔","🔴","🟠","🟡","🟢","🔵","🟣","⚫",
+                "⚪","🟤","🔺","🔻","🔸","🔹","🔶","🔷","▪️","▫️",
+                "◾","◽","◼️","◻️","🔈","🔉","🔊","🔇","🔔","🔕",
+                "✅","❎","✔️","☑️","➕","➖","✖️","➗","♾️","💲",
+                "⚠️","🚸","🔱","⚜️","🔰","♻️","©️","®️","™️"
+            ]
+        },
+
+        flags: {
+            title: "Flags",
+            emojis: [
+                "🏳️","🏴","🏁","🚩","🏳️‍🌈","🏳️‍⚧️","🇮🇳","🇺🇸","🇬🇧",
+                "🇨🇦","🇦🇺","🇳🇿","🇯🇵","🇰🇷","🇨🇳","🇫🇷","🇩🇪","🇮🇹",
+                "🇪🇸","🇵🇹","🇷🇺","🇺🇦","🇧🇷","🇦🇷","🇲🇽","🇿🇦","🇦🇪",
+                "🇸🇦","🇶🇦","🇸🇬","🇲🇾","🇮🇩","🇹🇭","🇳🇵","🇧🇩","🇱🇰",
+                "🇵🇰","🇧🇹","🇻🇳","🇵🇭","🇹🇷","🇬🇷","🇮🇱","🇪🇬","🇳🇬",
+                "🇰🇪","🇳🇴","🇸🇪","🇩🇰","🇫🇮","🇮🇸","🇳🇱","🇧🇪","🇨🇭",
+                "🇦🇹","🇵🇱","🇨🇿","🇭🇺","🇷🇴","🇬🇭","🇯🇲","🇨🇺","🇨🇱"
+            ]
+        }
+    };
+
+    async function getCurrentUser() {
+        try {
+            const response = await fetch(
+                "/api/auth/current-user",
+                {
+                    method: "GET",
+                    credentials: "include"
+                }
+            );
+
+            if (!response.ok) {
+                window.location.href = "/login.html";
+                return;
+            }
+
+            currentUser = await response.text();
+
+            document.getElementById("welcomeText").textContent =
+                "Logged in as " + currentUser + " ❤️";
+
+            loadMessages();
+
+        } catch (error) {
+            console.error("Current user error:", error);
+            window.location.href = "/login.html";
+        }
+    }
+
+    async function loadMessages() {
+        try {
+            const response = await fetch(
+                "/api/messages",
+                {
+                    method: "GET",
+                    credentials: "include"
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/login.html";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Could not load messages");
+            }
+
+            allMessages = await response.json();
+            displayMessages(allMessages);
+
+        } catch (error) {
+            console.error(error);
+
+            document.getElementById("messages").innerHTML =
+                '<div class="empty">Could not load messages. Please refresh. 💔</div>';
+        }
+    }
+
+    function displayMessages(messages) {
+        const messagesBox =
+            document.getElementById("messages");
+
+        messagesBox.innerHTML = "";
+
+        if (!messages || messages.length === 0) {
+            messagesBox.innerHTML =
+                '<div class="empty">No messages yet. Send the first one ❤️</div>';
+            return;
+        }
+
+        messages.forEach(message => {
+            const sender =
+                message.sender || message.username || "";
+
+            const text =
+                message.text || message.message || "";
+
+            const createdAt =
+                message.createdAt || message.timestamp;
+
+            const isSent =
+                sender.toLowerCase() === currentUser.toLowerCase();
+
+            const row =
+                document.createElement("div");
+
+            row.className =
+                "message-row " +
+                (isSent ? "sent" : "received");
+
+            const bubble =
+                document.createElement("div");
+
+            bubble.className = "bubble";
+
+            const messageText =
+                document.createElement("div");
+
+            messageText.className = "message-text";
+            messageText.textContent = text;
+
+            const time =
+                document.createElement("span");
+
+            time.className = "message-time";
+            time.textContent = formatTime(createdAt);
+
+            bubble.appendChild(messageText);
+            bubble.appendChild(time);
+            row.appendChild(bubble);
+            messagesBox.appendChild(row);
+        });
+
+        messagesBox.scrollTop =
+            messagesBox.scrollHeight;
+    }
+
+    function formatTime(value) {
+        if (!value) {
+            return "";
+        }
+
+        const date = new Date(value);
+
+        if (isNaN(date.getTime())) {
+            return "";
+        }
+
+        return date.toLocaleString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    async function sendMessage() {
+        const input =
+            document.getElementById("messageInput");
+
+        const text =
+            input.value.trim();
+
+        if (!text) {
+            return;
+        }
+
+        const status =
+            document.getElementById("statusText");
+
+        status.textContent = "Sending...";
+
+        try {
+            const response = await fetch(
+                "/api/messages",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        sender: currentUser,
+                        text: text
+                    })
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "/login.html";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Message was not sent");
+            }
+
+            input.value = "";
+            status.textContent = "";
+
+            await loadMessages();
+
+        } catch (error) {
+            console.error(error);
+            status.textContent =
+                "Message could not be sent 💔";
+        }
+    }
+
+    function toggleEmojiPicker() {
+        const picker =
+            document.getElementById("emojiPicker");
+
+        picker.classList.toggle("open");
+
+        if (picker.classList.contains("open")) {
+            showEmojiCategory("smileys");
+        }
+    }
+
+    function showEmojiCategory(category, selectedButton) {
+        const data =
+            emojiCategories[category];
+
+        if (!data) {
+            return;
+        }
+
+        document.getElementById("emojiTitle")
+            .textContent = data.title;
+
+        const grid =
+            document.getElementById("emojiGrid");
+
+        grid.innerHTML = "";
+
+        data.emojis.forEach(emoji => {
+            const button =
+                document.createElement("button");
+
+            button.className = "emoji-item";
+            button.type = "button";
+            button.textContent = emoji;
+            button.title = emoji;
+
+            button.onclick = () => {
+                addEmoji(emoji);
+            };
+
+            grid.appendChild(button);
+        });
+
+        document.querySelectorAll(".emoji-tab")
+            .forEach(button => {
+                button.classList.remove("active");
+            });
+
+        if (selectedButton) {
+            selectedButton.classList.add("active");
+        }
+    }
+
+    function addEmoji(emoji) {
+        const input =
+            document.getElementById("messageInput");
+
+        input.value += emoji;
+        input.focus();
+
+        showTyping();
+    }
+
+    function handleMessageKey(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function handleSearchKey(event) {
+        if (event.key === "Enter") {
+            searchMessages();
+        }
+    }
+
+    async function searchMessages() {
+        const search =
+            document.getElementById("searchInput")
+                .value.trim();
+
+        if (!search) {
+            displayMessages(allMessages);
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                "/api/messages?search=" +
+                encodeURIComponent(search),
+                {
+                    method: "GET",
+                    credentials: "include"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Search failed");
+            }
+
+            const results = await response.json();
+            displayMessages(results);
+
+        } catch (error) {
+            console.error(error);
+
+            document.getElementById("statusText")
+                .textContent = "Search failed.";
+        }
+    }
+
+    function showTyping() {
+        const typingText =
+            document.getElementById("typingText");
+
+        typingText.textContent =
+            currentUser + " is typing... 💭";
+
+        clearTimeout(typingTimer);
+
+        typingTimer = setTimeout(() => {
+            typingText.textContent = "";
+        }, 1200);
+    }
+
+    function toggleMenu() {
+    const navLinks = document.getElementById("navLinks");
+
+    if (navLinks) {
+        navLinks.classList.toggle("open");
+    }
+}
+
+    async function logout() {
+        try {
+            await fetch(
+                "/api/auth/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
+        } finally {
+            window.location.href = "/login.html";
+        }
+    }
+
+    showEmojiCategory("smileys");
+    getCurrentUser();
+</script>
+
+</body>
+</html>
